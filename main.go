@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"math/rand"
 	"time"
 	"fmt"
 	"io/ioutil"
@@ -12,26 +11,15 @@ import (
 	"os/exec"
 )
 
-//Testing
-func random(channel chan string, interval time.Duration) {
-    defer close(channel)
-    for {
-	rand.Seed(time.Now().UnixNano())
-    	channel <- fmt.Sprint(rand.Intn(100))
-	time.Sleep(interval)
-    }
-}
 
 // General Purpose
 func createRoutine(f func() string, interval time.Duration, channel chan string) {
     defer close(channel)
     for {
-	rand.Seed(time.Now().UnixNano())
     	channel <- f()
 	time.Sleep(interval)
     }
 }
-
 
 // Date Gathering
 func getDate() string {
@@ -40,6 +28,19 @@ func getDate() string {
 	return err.Error()
     }
     return fmt.Sprintf("%s", out);
+}
+
+func getBattery() string { 
+    out, err := exec.Command("acpi").Output()
+    if err != nil {
+	return err.Error()
+    }
+    bat := fmt.Sprintf("%s", out);
+    if strings.Contains(bat, " 0%") {
+	return " - "
+    }
+    bat = strings.ReplaceAll(bat, ", rate information unavailable", "")
+    return bat
 }
 
 // Internal Network IP Gathering
@@ -112,37 +113,37 @@ func getCrypto() string {
 func main () {
     var bar string
 
-    var random1 string
     var date string
     var ip string
+    var bat string
     var crypto string 
 
     // Create channels for each routine
-    randChannel1 := make(chan string)
     dateChannel := make(chan string)
     networkChannel := make(chan string)
+    powerChanel := make(chan string)
     cryptoChannel := make(chan string)
 
     // Calling the routines
-    go random(randChannel1, 2 * time.Second)
     go createRoutine(getDate, 1 * time.Second, dateChannel)
     go createRoutine(getIp, 10 * time.Second, networkChannel)
+    go createRoutine(getBattery, 2 * time.Minute, powerChanel)
     go createRoutine(getCrypto, time.Minute, cryptoChannel)
 
     for {
 	select {
-	    case msg := <- randChannel1:
-		random1 = msg
 	    case msg := <- dateChannel:
 		date = msg
 	    case msg := <- networkChannel:
 		ip = msg
+	    case msg := <- powerChanel:
+		bat = msg
 	    case msg := <- cryptoChannel:
 		crypto = msg
 	    default:
-		bar = fmt.Sprintf("Test 1: %s| %s | %s | %s |", random1, crypto, ip, date)
+		bar = fmt.Sprintf("| %s | %s | %s | %s |", crypto, bat, ip, date)
 		exec.Command("xsetroot", "-name", bar).Run()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
     }
 }

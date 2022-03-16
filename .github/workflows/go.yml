@@ -1,25 +1,18 @@
 name: Go
-
 on:
+  release:
+    types: [created]
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
 jobs:
-
-  build:
+  release-linux-amd64:
+    name: release linux/amd64
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
-    - name: Set up Go
-      uses: actions/setup-go@v2
+    - uses: wangyoucao577/go-release-action@v1.25
       with:
-        go-version: 1.17
-
-    - name: Build
-      run: go build -v ./...
-    
-    - name: Go Release Binary
-      uses: ngs/go-release.action@v1.0.2
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: linux
+        goarch: amd64

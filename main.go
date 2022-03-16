@@ -121,13 +121,13 @@ func main () {
     // Create channels for each routine
     dateChannel := make(chan string)
     networkChannel := make(chan string)
-    powerChanel := make(chan string)
+    powerChannel := make(chan string)
     cryptoChannel := make(chan string)
 
     // Calling the routines
     go createRoutine(getDate, 1 * time.Second, dateChannel)
     go createRoutine(getIp, 10 * time.Second, networkChannel)
-    go createRoutine(getBattery, 2 * time.Minute, powerChanel)
+    go createRoutine(getBattery, 2 * time.Minute, powerChannel)
     go createRoutine(getCrypto, time.Minute, cryptoChannel)
 
     for {
@@ -136,7 +136,7 @@ func main () {
 		date = msg
 	    case msg := <- networkChannel:
 		ip = msg
-	    case msg := <- powerChanel:
+	    case msg := <- powerChannel:
 		bat = msg
 	    case msg := <- cryptoChannel:
 		crypto = msg

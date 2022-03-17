@@ -57,7 +57,7 @@ func getIp() string {
 	    }
 	}
     } 
-    return "NOT CONNECTED" 
+    return "-" 
 }
 
 // Crypto HTTP Section
@@ -97,7 +97,7 @@ func getCrypto() string {
 
     resp, err := http.Get("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana")
     if err != nil {
-	return err.Error()
+	return "-"
     }
     defer resp.Body.Close()
     
